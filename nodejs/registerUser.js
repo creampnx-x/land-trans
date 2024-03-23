@@ -51,10 +51,10 @@ async function main() {
         const userIdentity = X509WalletMixin.createIdentity('Org1MSP', enrollment.certificate, enrollment.key.toBytes());
         await wallet.import(userId, userIdentity);
         console.log('Successfully registered and enrolled admin user '+userId+' and imported it into the wallet');
-        callback('200')
+        callback(200)
     } catch (error) {
         console.error(`Failed to register user `+userId+`: ${error}`);
-        callback('400')
+        callback(error?.toString())
         process.exit(1);
     }
 }

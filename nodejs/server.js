@@ -13,6 +13,14 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+// 跨域
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', 'Authorization,X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH, PUT, DELETE')
+  res.header('Allow', 'GET, POST, PATCH, OPTIONS, PUT, DELETE')
+  next();
+});
 
 var urlbodyParser = bodyParser.urlencoded({
   extended: true
@@ -21,8 +29,15 @@ app.set('views', __dirname + '/views'); // tell the directory of webpage .ejs ex
 app.set('view engine', 'ejs');
 
 
-app.get('/createuser', function(req, res) {
-  callback = function(queryResult) { // this check user account is still active or not
+app.post('/land/create', (req, res) => {
+  const data = req.body;
+
+  // position string, landId string, owner string, valid string
+  
+});
+
+app.get('/createuser', function (req, res) {
+  callback = function (queryResult) { // this check user account is still active or not
     queryResult = queryResult.replace(/\"/g, '')
     queryResult = queryResult.replace('[', '')
     queryResult = queryResult.replace(']', '')
@@ -46,11 +61,57 @@ app.get('/createuser', function(req, res) {
   query.query('users', 'QueryAllBossId', '', callback, 'admin')
 }); // this api call is used to create user in system it open user creation form
 
-app.post('/create', function(req, res) {
+app.post('/land/resgiter', function (req, res) {
   console.log(req.body);
-  callback = function(queryResult) { // this check user account is still active or not
+
+  registerUser.registerUser(req.body.user_id, function (result) {
+    if (result == 200) {
+      const process = (resultCode) => {
+        if (resultCode == 200) {
+          res.send(JSON.stringify({
+            status: 'success',
+            info: '',
+            data: null
+          }));
+        }
+      }
+      invoke.createUser('users', 'CreateUser', req.body.name, req.body.user_id, req.body.password, req.body.role, req.body.boss, process, 'admin');
+    } else {
+      res.send(JSON.stringify({
+        status: 'fail',
+        info: 'user already register.',
+        data: null
+      }));
+    }
+  });
+});
+
+
+app.post('/land/login', function (req, res) {
+  console.log(req.body);
+
+  const process = (result) => {
+
+    if (result == 'true') {
+
+      query.getUserDetails('users', 'QueryUser', req.body.user_id, (result) => {
+        // fixme: 直接return
+        const object = JSON.parse(result);
+        res.send(JSON.stringify(object));
+      })
+
+    }
+
+  }
+
+  query.login('users', 'LogIn', req.body.password, process, req.body.user_id) // here we query to blockchain and run SmartContract to check user id and password
+});
+
+app.post('/create', function (req, res) {
+  console.log(req.body);
+  callback = function (queryResult) { // this check user account is still active or not
     if (queryResult == 200) {
-      callback = function(queryResult) { // this check user account is still active or not
+      callback = function (queryResult) { // this check user account is still active or not
         if (queryResult == 200) {
           var data = {
             message: "User Successfully Created Login Please"
@@ -59,7 +120,7 @@ app.post('/create', function(req, res) {
             data: data
           });
         } else {
-          callback = function(queryResult) { // this check user account is still active or not
+          callback = function (queryResult) { // this check user account is still active or not
             queryResult = queryResult.replace(/\"/g, '')
             queryResult = queryResult.replace('[', '')
             queryResult = queryResult.replace(']', '')
@@ -88,7 +149,7 @@ app.post('/create', function(req, res) {
 }); // this will received request and data to create user
 
 
-app.get('/login', function(req, res) {
+app.get('/login', function (req, res) {
   var data = {
     message: ""
   }
@@ -100,10 +161,10 @@ app.get('/login', function(req, res) {
 
 
 
-app.post('/login', function(req, res) {
-  callback = function(queryResult) { // this check user account is still active or not
-    if (queryResult = 'true') {
-      callback = function(queryResult) { // this check user account is still active or not
+app.post('/login', function (req, res) {
+  callback = function (queryResult) { // this check user account is still active or not
+    if (queryResult == 'true') {
+      callback = function (queryResult) { // this check user account is still active or not
         var obj = JSON.parse(queryResult);
         console.log(obj);
         if (obj.role == 'Boss') { // here we check the role of user and redirect them to their respective page
@@ -143,7 +204,7 @@ app.post('/login', function(req, res) {
 
 
 
-app.post('/createTransaction', function(req, res) {
+app.post('/createTransaction', function (req, res) {
   var obj = JSON.parse(req.body.obj);
   var data = {
     tranCreated: obj.userid,
@@ -157,9 +218,9 @@ app.post('/createTransaction', function(req, res) {
 });
 
 
-app.post('/transfer', function(req, res) {
+app.post('/transfer', function (req, res) {
   var obj = JSON.parse(req.body.obj);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     if (queryResult == 200) {
       var data = {
         message: "Successfully Transfer",
@@ -183,9 +244,9 @@ app.post('/transfer', function(req, res) {
 
 
 
-app.post('/ViewAllTransactonCreatedByMe', function(req, res) {
+app.post('/ViewAllTransactonCreatedByMe', function (req, res) {
   var obj = JSON.parse(req.body.obj);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
 
     queryResult = queryResult.replace(/\"/g, '')
     queryResult = queryResult.replace('[', '')
@@ -210,9 +271,9 @@ app.post('/ViewAllTransactonCreatedByMe', function(req, res) {
   query.getAllTransacionCreatedByMe('tran', 'QueryAllTransationCreatedByMe', callback, obj.userid)
 }); // here we get all the tran create by login user
 
-app.post('/ViewAllTransaction', function(req, res) {
+app.post('/ViewAllTransaction', function (req, res) {
   var obj = JSON.parse(req.body.obj);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     queryResult = queryResult.replace(/\"/g, '')
     queryResult = queryResult.replace('[', '')
     queryResult = queryResult.replace(']', '')
@@ -241,11 +302,11 @@ app.post('/ViewAllTransaction', function(req, res) {
 }); // here we get all the tran under one boss or company
 
 
-app.post('/requestForViewDetails', function(req, res) {
+app.post('/requestForViewDetails', function (req, res) {
 
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     if (queryResult == 200) {
       var data = {
         message: "Request Has Been submitted",
@@ -267,10 +328,10 @@ app.post('/requestForViewDetails', function(req, res) {
   invoke.createViwRequest("tran", "CreateViwRequest", values[1], obj.whoboss, obj.userid, callback, obj.userid)
 }); // here we get details of transation if we have permission
 
-app.post('/viewTransationDetailsAfterRequest', function(req, res) {
+app.post('/viewTransationDetailsAfterRequest', function (req, res) {
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     var data = {
       result: queryResult,
       obj: values[0]
@@ -283,7 +344,7 @@ app.post('/viewTransationDetailsAfterRequest', function(req, res) {
 }); // here we sendrequest to view transation in systm
 
 
-app.get('/logout', function(req, res) { // student login page
+app.get('/logout', function (req, res) { // student login page
   var data = {
     message: ""
   }
@@ -294,9 +355,9 @@ app.get('/logout', function(req, res) { // student login page
 });
 
 //////////////////////////////////////////////////////////////////////////////////////////Boss api Call /////////////////////////////////////////////////
-app.post('/queryAllUnvalidatedTransationId', function(req, res) {
+app.post('/queryAllUnvalidatedTransationId', function (req, res) {
   var obj = JSON.parse(req.body.obj);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     queryResult = queryResult.replace(/\"/g, '')
     queryResult = queryResult.replace('[', '')
     queryResult = queryResult.replace(']', '')
@@ -320,10 +381,10 @@ app.post('/queryAllUnvalidatedTransationId', function(req, res) {
 
 
 
-app.post('/ApprovedRequest', function(req, res) {
+app.post('/ApprovedRequest', function (req, res) {
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     var data = {
       message: 'Request ' + values[1] + ' Successfully Approved',
       obj: values[0]
@@ -337,10 +398,10 @@ app.post('/ApprovedRequest', function(req, res) {
 
 
 
-app.post('/RejecedRequest', function(req, res) {
+app.post('/RejecedRequest', function (req, res) {
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     var data = {
       message: 'Request ' + values[1] + ' Successfully Rejected',
       obj: values[0]
@@ -354,10 +415,10 @@ app.post('/RejecedRequest', function(req, res) {
 
 
 
-app.post('/RejectTransation', function(req, res) {
+app.post('/RejectTransation', function (req, res) {
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     var data = {
       message: 'Transaction Rejected',
       obj: values[0]
@@ -370,15 +431,15 @@ app.post('/RejectTransation', function(req, res) {
 }); // here set Transaction Reject    // here we reject Transaction
 
 
-app.post('/queryAllValidatedTransationIdByMe', function(req, res) {
+app.post('/queryAllValidatedTransationIdByMe', function (req, res) {
   var obj = JSON.parse(req.body.obj);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     queryResult = queryResult.replace(/\"/g, '')
     queryResult = queryResult.replace('[', '')
     queryResult = queryResult.replace(']', '')
     queryResult = queryResult.replace('{', '')
     queryResult = queryResult.replace('}', '')
-    console.log("queryAllValidatedTransationIdByMe" ,queryResult);
+    console.log("queryAllValidatedTransationIdByMe", queryResult);
     if (queryResult != '') {
       transactionid = queryResult.split(',');
     } else {
@@ -397,10 +458,10 @@ app.post('/queryAllValidatedTransationIdByMe', function(req, res) {
 
 
 
-app.post('/ViewTransationDetails', function(req, res) {
+app.post('/ViewTransationDetails', function (req, res) {
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     var data = {
       result: queryResult,
       obj: values[0]
@@ -415,9 +476,9 @@ app.post('/ViewTransationDetails', function(req, res) {
 
 
 
-app.post('/queryAllRequestToViewTransion', function(req, res) {
+app.post('/queryAllRequestToViewTransion', function (req, res) {
   var obj = JSON.parse(req.body.obj);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     queryResult = queryResult.replace(/\"/g, '')
     queryResult = queryResult.replace('[', '')
     queryResult = queryResult.replace(']', '')
@@ -453,10 +514,10 @@ app.post('/queryAllRequestToViewTransion', function(req, res) {
 
 
 
-app.post('/ApprovedTransation', function(req, res) {
+app.post('/ApprovedTransation', function (req, res) {
   values = req.body.data.split('~') // we conncatenat object of user data and transactionid b/c we don't send two hidden type data from one form
   var obj = JSON.parse(values[0]);
-  callback = function(queryResult) { // this check user account is still active or not
+  callback = function (queryResult) { // this check user account is still active or not
     var data = {
       message: 'Transaction Successfully Approved',
       obj: values[0]

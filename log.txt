@@ -1,4 +1,4 @@
 Installed chaincodes on peer:
+Package ID: tran_1:97fe00e3426acd41196aa8aaf206c841ccfdc72efe21355204be0d12c43f4d1c, Label: tran_1
 Package ID: land_1:59ce5451f1b2a9c83823d71b92a55d71f08b47894ddfc7cb0740f151a2b6ce77, Label: land_1
 Package ID: users_1:e9ef555692d413b58bcdf70af68dda5b855a6de71e56515c4088d65d3106afef, Label: users_1
-Package ID: tran_1:a7f299e5682cf215a7969591331dfd4c1babfed97f1e50444c60a5e60bf086d5, Label: tran_1

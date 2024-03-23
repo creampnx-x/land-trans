@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 
-
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -54,6 +53,7 @@ type TransactionViewRequest struct { // this struct is user to store request dat
 	RequestBy      string `json:"requestby"`
 	RequestProcess string `json:"requestprocess"`
 }
+
 //
 // type QueryResult struct {
 // 	Key    string
@@ -84,7 +84,7 @@ func (s *SmartContract) CreateTransaton(ctx contractapi.TransactionContextInterf
 		Validate:            `false`,
 		ViewBy:              ``}
 	transationAsBytes, _ := json.Marshal(transaction)
-	id :=  transactionId + `-` + string(transationCountBytes)
+	id := transactionId + `-` + string(transationCountBytes)
 
 	_ = ctx.GetStub().PutState("transationCount", []byte(strconv.Itoa(transationCount)))
 	return ctx.GetStub().PutState(id, transationAsBytes)
@@ -107,7 +107,6 @@ func (s *SmartContract) QueryTransation(ctx contractapi.TransactionContextInterf
 	transaction := new(Tran)
 	_ = json.Unmarshal(transationAsBytes, transaction)
 
-
 	if transaction.ValidatedBy == viewBy {
 		return transaction
 	} else {
@@ -118,272 +117,6 @@ func (s *SmartContract) QueryTransation(ctx contractapi.TransactionContextInterf
 			return nil
 		}
 	}
-	return nil
-}
-
-/*
-this function will get singel argument UserId which must be Boss id and return all the transaction id which are waiting for validation
-*/
-func (s *SmartContract) QueryAllUnvalidatedTransationId(ctx contractapi.TransactionContextInterface, validatedBy string) ([]string, error) {
-	startKey := ""
-	endKey := ""
-
-	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []string{}
-
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-
-		if err != nil {
-			return nil, err
-		}
-		if queryResponse.Key == `transationCount` || queryResponse.Key == `requestCount` {
-			continue
-		}
-
-		transaction := new(Tran)
-		_ = json.Unmarshal(queryResponse.Value, transaction)
-		if transaction.Validate == `false` && transaction.ValidatedBy == validatedBy {
-			results = append(results, queryResponse.Key)
-		}
-	}
-
-	return results, nil
-}
-
-/*
-this function will get singel argument UserId which must be Boss id and return all the transaction id which are Validated by Me
-*/
-func (s *SmartContract) QueryAllValidatedTransationIdByMe(ctx contractapi.TransactionContextInterface, validatedby string) ([]string, error) {
-	startKey := ""
-	endKey := ""
-
-	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []string{}
-
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-
-		if err != nil {
-			return nil, err
-		}
-		if queryResponse.Key == `transationCount` || queryResponse.Key == `requestCount` {
-			continue
-		}
-
-		transaction := new(Tran)
-		_ = json.Unmarshal(queryResponse.Value, transaction)
-		if transaction.ValidatedBy == validatedby && transaction.Validate == `true` {
-			results = append(results, queryResponse.Key)
-		}
-	}
-
-	return results, nil
-}
-
-/*
-this function will take 3 argument in parameter and change the transaction status to validated
-first will user id which is logIn to check the validator is come who have permissions to make transaction validated
-secand will be transactionid
-third will be tell either transaction is valid or not
-*/
-func (s *SmartContract) ValidateTransation(ctx contractapi.TransactionContextInterface, transactionid string, userid string, validate string) error {
-	transaction:= s.QueryTransation(ctx, transactionid, userid)
-
-
-	if transaction.ValidatedBy == userid {
-		transaction.Validate = validate
-	}
-
-	transactionAsBytes, _ := json.Marshal(transaction)
-
-	return ctx.GetStub().PutState(transactionid, transactionAsBytes)
-}
-
-//this function will get singel argument UserId which must be Employee id and return all the transaction id which are Created by that Employee
-
-func (s *SmartContract) QueryAllTransationCreatedByMe(ctx contractapi.TransactionContextInterface, TransactionCreateBy string) ([]string, error) {
-	startKey := ""
-	endKey := ""
-
-	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []string{}
-
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-
-		if err != nil {
-			return nil, err
-		}
-		if queryResponse.Key == `transationCount` || queryResponse.Key == `requestCount` {
-			continue
-		}
-		transaction := new(Tran)
-		_ = json.Unmarshal(queryResponse.Value, transaction)
-		index := strings.Index(queryResponse.Key, `request`)
-		if index == -1 {
-			if transaction.TransactionCreateBy == TransactionCreateBy {
-				results = append(results, queryResponse.Key)
-			}
-		}
-
-	}
-
-	return results, nil
-}
-
-/*
-this function Return all id's of transaction which is created under some Boss
-It required two parameter one boss id and other will be Employee id
-*/
-func (s *SmartContract) QueryAllTransationInCompany(ctx contractapi.TransactionContextInterface, ValidatedBy string, userid string) ([]string, error) {
-	startKey := ""
-	endKey := ""
-
-	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []string{}
-
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-
-		if err != nil {
-			return nil, err
-		}
-		if queryResponse.Key == `transationCount` || queryResponse.Key == `requestCount` {
-			continue
-		}
-		transaction := new(Tran)
-		_ = json.Unmarshal(queryResponse.Value, transaction)
-		index := strings.Index(queryResponse.Key, `request`)
-		if index == -1 {
-			if transaction.ValidatedBy == ValidatedBy {
-				data := queryResponse.Key
-				index := strings.Index(transaction.ViewBy, userid+`,`) // here we check dose viewby string contains my user id if yes then i have permission to view the transaction details otherwise no i have to send requested for view
-
-				if index > -1 {
-					data += ":Yes"
-				} else {
-					data += ":No"
-				}
-				results = append(results, data)
-			}
-		}
-
-	}
-
-	return results, nil
-}
-
-func (s *SmartContract) CreateViwRequest(ctx contractapi.TransactionContextInterface, requestid string, transactionId string, requestto string, requestby string) error {
-	requestCountBytes, _ := ctx.GetStub().GetState("requestCount")
-	requestCount, _ := strconv.Atoi(string(requestCountBytes))
-	requestCount = requestCount + 1
-	var transactionViewRequest = TransactionViewRequest{
-		TransactionId:  transactionId,
-		RequestId:      requestid,
-		RequestTo:      requestto,
-		RequestBy:      requestby,
-		RequestProcess: ``,
-	}
-
-	requestAsBytes, _ := json.Marshal(transactionViewRequest)
-	id := requestid + `-` + string(requestCountBytes)
-
-	_ = ctx.GetStub().PutState("requestCount", []byte(strconv.Itoa(requestCount)))
-	return ctx.GetStub().PutState(id, requestAsBytes)
-}
-
-/*
-this function will get singel argument UserId which must be Boss id and return all the Request To view Tran
-
-*/
-
-func (s *SmartContract) QueryAllRequestToViewTransion(ctx contractapi.TransactionContextInterface, RequestTo string) ([]string, error) {
-	startKey := ""
-	endKey := ""
-
-	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []string{}
-
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-
-		if err != nil {
-			return nil, err
-		}
-		if queryResponse.Key == `transationCount` || queryResponse.Key == `requestCount` {
-			continue
-		}
-		request := new(TransactionViewRequest)
-		_ = json.Unmarshal(queryResponse.Value, request)
-
-		if request.RequestTo == RequestTo && request.RequestProcess == `` {
-			data := queryResponse.Key + ":" + request.TransactionId
-			results = append(results, data)
-		}
-
-	}
-
-	return results, nil
-}
-
-/*
-This function two parameter request id and change the status of request to approved or deny
-and secand will be allow or deny
-*/
-func (s *SmartContract) RequestProcess(ctx contractapi.TransactionContextInterface, requestid string, permission string) error {
-	requestAsBytes, _ := ctx.GetStub().GetState(requestid)
-	request := new(TransactionViewRequest)
-	_ = json.Unmarshal(requestAsBytes, request)
-
-
-	transactionAsBytes, _ := ctx.GetStub().GetState(request.TransactionId)
-	transaction := new(Tran)
-	_ = json.Unmarshal(transactionAsBytes, transaction)
-
-
-	request.RequestProcess = `true` // change the RequestProcess true that mean request is process
-
-	if permission == `allow` { // if Boss allow
-		transaction.ViewBy += request.RequestBy + `,`     // then we add the requestby append to the viewby add allow user to view the transaction
-	}
-	transactionAsBytes, _ = json.Marshal(transaction) // update the Tran Record
-	_ = ctx.GetStub().PutState(request.TransactionId, transactionAsBytes)
-
-	requestAsBytes, _ = json.Marshal(request) // update The Request Record
-	_ = ctx.GetStub().PutState(requestid, requestAsBytes)
-
-	return nil
 }
 
 func main() {

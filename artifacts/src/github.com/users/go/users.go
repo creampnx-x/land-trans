@@ -1,5 +1,3 @@
-
-
 package main
 
 import (
@@ -24,8 +22,7 @@ type Users struct {
 
 // InitLedger adds a base set of cars to the ledger
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-  return nil
-
+	return nil
 }
 
 func (s *SmartContract) CreateUser(ctx contractapi.TransactionContextInterface, name string, userid string, password string, role string, whoboss string) error {
@@ -56,44 +53,18 @@ func (s *SmartContract) QueryUser(ctx contractapi.TransactionContextInterface, u
 	return user, nil
 }
 
-func (s *SmartContract) QueryAllBossId(ctx contractapi.TransactionContextInterface) ([]string, error) {
-	startKey := ""
-	endKey := ""
-
-	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
-
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	results := []string{}
-
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results,  queryResponse.Key)
-	}
-
-	return results, nil
-}
-
 func (s *SmartContract) LogIn(ctx contractapi.TransactionContextInterface, userId string, password string) string {
 	user, err := s.QueryUser(ctx, userId)
 
 	if err != nil {
 		return `error`
 	}
-  check := ``
-  if user.UserId == userId && user.Password == password {	// check the Value
-    check = `true`
-  } else {
-    check = `fasle`
-  }
+	check := ``
+	if user.UserId == userId && user.Password == password { // check the Value
+		check = `true`
+	} else {
+		check = `fasle`
+	}
 	return check
 
 }

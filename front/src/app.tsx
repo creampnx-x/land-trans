@@ -20,12 +20,22 @@ export async function getInitialState(): Promise<{
   loading?: boolean;
   fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
-  const fetchUserInfo = async () => {
+  const fetchUserInfo: any = async () => {
     try {
-      const msg = await queryCurrentUser({
-        skipErrorHandler: true,
-      });
-      return msg.data;
+      // const msg = await queryCurrentUser({
+      //   skipErrorHandler: true,
+      // });
+      // return msg.data;
+      let info = sessionStorage.getItem('user_info');
+      if (info)
+        info = JSON.parse(info);
+      else
+        throw new Error('not login');
+      return {
+        ...Object(info),
+        avatar: 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
+        access: 'admin'
+      }
     } catch (error) {
       history.push(loginPath);
     }
@@ -91,11 +101,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     ],
     links: isDev
       ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>OpenAPI 文档</span>
-          </Link>,
-        ]
+        <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
+          <LinkOutlined />
+          <span>OpenAPI 文档</span>
+        </Link>,
+      ]
       : [],
     menuHeaderRender: undefined,
     // 自定义 403 页面
