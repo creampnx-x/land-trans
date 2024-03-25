@@ -2,6 +2,9 @@
 github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 github.com/PuerkitoBio/urlesc
+# github.com/fatih/structs v1.1.0
+## explicit
+github.com/fatih/structs
 # github.com/go-openapi/jsonpointer v0.19.3
 github.com/go-openapi/jsonpointer
 # github.com/go-openapi/jsonreference v0.19.2
@@ -25,7 +28,6 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/hyperledger/fabric-chaincode-go v0.0.0-20200424173110-d7076418f212
-## explicit
 github.com/hyperledger/fabric-chaincode-go/pkg/attrmgr
 github.com/hyperledger/fabric-chaincode-go/pkg/cid
 github.com/hyperledger/fabric-chaincode-go/shim
@@ -40,7 +42,6 @@ github.com/hyperledger/fabric-contract-api-go/internal/utils
 github.com/hyperledger/fabric-contract-api-go/metadata
 github.com/hyperledger/fabric-contract-api-go/serializer
 # github.com/hyperledger/fabric-protos-go v0.0.0-20200424173316-dd554ba3746e
-## explicit
 github.com/hyperledger/fabric-protos-go/common
 github.com/hyperledger/fabric-protos-go/ledger/queryresult
 github.com/hyperledger/fabric-protos-go/ledger/rwset
@@ -75,6 +76,12 @@ golang.org/x/net/trace
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
 ## explicit
+golang.org/x/text/cases
+golang.org/x/text/internal
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi

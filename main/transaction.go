@@ -9,19 +9,19 @@ import (
 
 /***********************  invoke  ******************************/
 
-func CreateTransation(c *gin.Context) {
+func CreateTransaction(c *gin.Context) {
 	network := GetNetwork()
 
 	var body struct {
-		TransationId string `json: "transationId" binding: "required"`
-		LandId       string `json: "landId" binding: "required"`
-		Requester    string `json: "requester" binding: "required"`
-		Validar      string `json: "validar" binding: "required"`
-		IsValid      string `json: "isValid" binding: "required"`
+		TransactionId string `json:"transactionId" binding:"required"`
+		LandId        string `json:"landId" binding:"required"`
+		Requester     string `json:"requester" binding:"required"`
+		Validar       string `json:"validar" binding:"required"`
+		IsValid       string `json:"isValid" binding:"required"`
 		// status 代表交易状态 -2 - -1 - 0 - 1 分别代表 [已取消、已拒绝、交易中、已成交]
-		Status string `json: "status" binding: "required"`
-		Date   string `json: "date" binding: "required"`
-		Price  string `json: "price" binding: "required"`
+		Status string `json:"status" binding:"required"`
+		Date   string `json:"date" binding:"required"`
+		Price  string `json:"price" binding:"required"`
 	}
 
 	// 检查字段并绑定
@@ -46,37 +46,37 @@ func CreateTransation(c *gin.Context) {
 	json.Unmarshal([]byte(land), &jsonMap)
 
 	// 在交易中 - 不得再交易
-	if jsonMap["inTransation"] == "true" {
+	if jsonMap["inTransaction"] == "true" {
 		c.JSON(http.StatusBadRequest, Response{"fail", "land already in transition!", nil})
 		return
 	}
 
 	// 不在交易中 - 流转交易状态
-	BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransation", "true"}})
+	BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransaction", "true"}})
 
-	result, err := BaseInvoke(network, Information{"tran", "CreateTransation", []string{
-		body.TransationId, body.LandId, body.Requester, body.Validar, body.IsValid, body.Date, body.Price,
+	result, err := BaseInvoke(network, Information{"tran", "CreateTransaction", []string{
+		body.TransactionId, body.LandId, body.Requester, body.Validar, body.IsValid, body.Date, body.Price,
 	}})
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 
 		// 回退交易状态
-		BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransation", "false"}})
+		BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransaction", "false"}})
 		return
 	}
 
 	c.JSON(http.StatusOK, Response{"ok", "", result})
 }
 
-func ValidTransation(c *gin.Context) {
+func ValidTransaction(c *gin.Context) {
 	network := GetNetwork()
 
 	var body struct {
-		TransationId string `json: "transationId" binding: "required"`
-		Requester    string `json: "requester" binding: "required"`
-		Validar      string `json: "validar" binding: "required"`
-		Status       string `json: "status" binding: "required"`
+		TransactionId string `json:"transactionId" binding:"required"`
+		Requester     string `json:"requester" binding:"required"`
+		Validar       string `json:"validar" binding:"required"`
+		Status        string `json:"status" binding:"required"`
 	}
 
 	// 检查字段并绑定
@@ -93,7 +93,7 @@ func ValidTransation(c *gin.Context) {
 	// fixme: 当交易结束应当取消所有请求交易本土地的请求
 	// 或者 将在交易中的土地锁起来 [use this to fix]
 
-	_, err := BaseInvoke(network, Information{"tran", "ValidTransation", []string{body.TransationId, body.Status}})
+	_, err := BaseInvoke(network, Information{"tran", "ValidTransaction", []string{body.TransactionId, body.Status}})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 		return
@@ -106,10 +106,10 @@ func ValidTransation(c *gin.Context) {
 	}
 
 	// 进行所有权转让
-	result, err := BaseInvoke(network, Information{"land", "UpdateLand", []string{"owner", body.TransationId, "owner", body.Requester}})
+	result, err := BaseInvoke(network, Information{"land", "UpdateLand", []string{body.TransactionId, "owner", body.Requester}})
 	if err != nil {
 		// 交易回退状态
-		BaseInvoke(network, Information{"tran", "ValidTransation", []string{body.TransationId, "0"}})
+		BaseInvoke(network, Information{"tran", "ValidTransaction", []string{body.TransactionId, "0"}})
 
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 		return
@@ -120,13 +120,13 @@ func ValidTransation(c *gin.Context) {
 
 /***********************   query  ******************************/
 
-func QueryTransation(c *gin.Context) {
+func QueryTransaction(c *gin.Context) {
 	network := GetNetwork()
 
-	transationId, isMatch := c.Params.Get("transationId")
+	transactionId, isMatch := c.Params.Get("transactionId")
 
 	if isMatch {
-		result, err := BaseQuery(network, Information{"tran", "QueryTransation", []string{transationId}})
+		result, err := BaseQuery(network, Information{"tran", "QueryTransaction", []string{transactionId}})
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
@@ -136,25 +136,19 @@ func QueryTransation(c *gin.Context) {
 		c.JSON(http.StatusOK, Response{"ok", "query success.", result})
 
 	} else {
-		c.JSON(http.StatusBadRequest, Response{"fail", "transation ID is required.", nil})
+		c.JSON(http.StatusBadRequest, Response{"fail", "transaction ID is required.", nil})
 	}
 }
 
-func QueryTransationByKey(c *gin.Context) {
+func QueryTransactionByKey(c *gin.Context) {
 	network := GetNetwork()
 
-	transationId := c.Query("transationId")
 	key := c.Query("key")
 	value := c.Query("value")
 
-	if transationId == "" {
-		c.JSON(http.StatusBadRequest, Response{"fail", "transation ID is required.", nil})
-		return
-	}
-
 	if key != "" && value != "" {
 		// 查链
-		result, err := BaseQuery(network, Information{"tran", "QueryTransationByKey", []string{transationId, key, value}})
+		result, err := BaseQuery(network, Information{"tran", "QueryTransactionByKey", []string{key, value}})
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})

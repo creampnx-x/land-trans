@@ -13,11 +13,11 @@ func CreateLand(c *gin.Context) {
 	network := GetNetwork()
 
 	var body struct {
-		Position     string `json: "position" binding: "required"`
-		LandId       string `json: "landId" binding: "required"`
-		Owner        string `json: "Owner" binding: "required"`
-		Valid        string `json: "valid" binding: "required"`
-		InTransation string `json: "inTransation" binding: "required"`
+		Position      string `json:"position" binding:"required"`
+		LandId        string `json:"landId" binding:"required"`
+		Owner         string `json:"Owner" binding:"required"`
+		Valid         string `json:"valid" binding:"required"`
+		InTransaction string `json:"inTransaction" binding:"required"`
 	}
 
 	// 检查字段
@@ -50,7 +50,7 @@ func CreateLand(c *gin.Context) {
 
 	// 上链
 	result, err := BaseInvoke(network, Information{"land", "CreateLand", []string{
-		body.Position, body.LandId, body.Owner, body.Valid, body.InTransation,
+		body.Position, body.LandId, body.Owner, body.Valid, body.InTransaction,
 	}})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
@@ -81,9 +81,9 @@ func UpdateLand(c *gin.Context) {
 	network := GetNetwork()
 
 	var body struct {
-		LandId string `json: "landId" binding: "required"`
-		Key    string `json: "key" binding: "required"`
-		Value  string `json: "value" binding: "required"`
+		LandId string `json:"landId" binding:"required"`
+		Key    string `json:"key" binding:"required"`
+		Value  string `json:"value" binding:"required"`
 	}
 
 	// 检查字段
@@ -128,18 +128,12 @@ func QueryLand(c *gin.Context) {
 func QueryLandByKey(c *gin.Context) {
 	network := GetNetwork()
 
-	landId := c.Query("landId")
 	key := c.Query("key")
 	value := c.Query("value")
 
-	if landId == "" {
-		c.JSON(http.StatusBadRequest, Response{"fail", "land id is required.", nil})
-		return
-	}
-
 	if key != "" && value != "" {
 		// 查链
-		result, err := BaseQuery(network, Information{"land", "QueryLandByKey", []string{landId, key, value}})
+		result, err := BaseQuery(network, Information{"land", "QueryLandByKey", []string{key, value}})
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})

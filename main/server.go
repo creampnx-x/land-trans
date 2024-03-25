@@ -37,13 +37,13 @@ func setupRouter() *gin.Engine {
 
 	/********************* tran *****************************/
 
-	r.POST("/land/tran/create", CreateTransation)
+	r.POST("/land/tran/create", CreateTransaction)
 
-	r.POST("/land/tran/valid", ValidTransation)
+	r.POST("/land/tran/valid", ValidTransaction)
 
-	r.GET("/land/tran/:transationId", QueryTransation)
+	r.GET("/land/tran/:transactionId", QueryTransaction)
 
-	r.GET("/land/tran", QueryTransationByKey)
+	r.GET("/land/tran", QueryTransactionByKey)
 
 	return r
 }

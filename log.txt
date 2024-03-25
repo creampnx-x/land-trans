@@ -1,4 +1,9 @@
 Installed chaincodes on peer:
-Package ID: tran_1:97fe00e3426acd41196aa8aaf206c841ccfdc72efe21355204be0d12c43f4d1c, Label: tran_1
-Package ID: land_1:59ce5451f1b2a9c83823d71b92a55d71f08b47894ddfc7cb0740f151a2b6ce77, Label: land_1
-Package ID: users_1:e9ef555692d413b58bcdf70af68dda5b855a6de71e56515c4088d65d3106afef, Label: users_1
+Package ID: tran_1:c9d290443f7f098f68a60004351b23c51e4e29e15989e8621f90a81f5894fc80, Label: tran_1
+Package ID: land_1:d2efac6f0470477ad60345cfea049c7072303b6395eca76826c8dc97552ae75f, Label: land_1
+Package ID: tran_2:5766b653aa7acb409316a31d88bb55b8afb0ddb21a41344e4c104fd084dc50da, Label: tran_2
+Package ID: tran_3:964130a1633a08ae8dd43f1753dce50ad09e8412034ea5c6aacd73fb27177688, Label: tran_3
+Package ID: tran_4:006f5de8be0bfcbdaab180e8a56317e94a87a58648149851459a4d35b09d81da, Label: tran_4
+Package ID: tran_5:520c94dae9314cebdcc3d9275d923cec687b69ce252742dcb52fefdf0815adae, Label: tran_5
+Package ID: tran_6:169d1b2e77fae1574ee33120b27481fe137f3e67894e4c91dea355545321e77d, Label: tran_6
+Package ID: users_1:270350f198246decb4eed0556d382a52191936f71eb206aff1f44e9169c80838, Label: users_1

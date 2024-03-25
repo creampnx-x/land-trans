@@ -12,7 +12,7 @@ presetup
 
 CHANNEL_NAME="mychannel"
 CC_RUNTIME_LANGUAGE="golang"
-VERSION="1"
+VERSION="6"
 CC_SRC_PATH="./artifacts/src/github.com/${fileName}/go"
 CC_NAME=$fileName
 

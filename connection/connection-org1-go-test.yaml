@@ -23,6 +23,8 @@ certificateAuthorities:
 channels:
 
   mychannel:
+    orderers: 
+      - orderer
 
     peers:
 
@@ -195,7 +197,16 @@ entityMatchers:
 
       mappedHost: peer1.org2.example.com
 
+  order:
     - pattern: orderer.example.com:(\d+)
+
+      urlSubstitutionExp: grpcs://localhost:7050
+
+      sslTargetOverrideUrlSubstitutionExp: orderer.example.com
+
+      mappedHost: orderer.example.com
+
+    - pattern: orderer.example.com:7050
 
       urlSubstitutionExp: grpcs://localhost:7050
 

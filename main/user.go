@@ -12,9 +12,9 @@ func Register(c *gin.Context) {
 	network := GetNetwork()
 
 	var Body struct {
-		UserId   string `json:"userId" binding: "required"`
+		UserId   string `json:"userId" binding:"required"`
 		Password string `json:"password" binding:"required"`
-		Name     string `json:"name" binding: "required"`
+		Name     string `json:"name" binding:"required"`
 	}
 
 	// 检查字段并绑定
@@ -65,7 +65,7 @@ func LogIn(c *gin.Context) {
 	network := GetNetwork()
 
 	var Body struct {
-		UserId   string `json:"userId" binding: "required"`
+		UserId   string `json:"userId" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 

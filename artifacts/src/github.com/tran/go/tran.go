@@ -1,122 +1,124 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 package main
 
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
+	"github.com/fatih/structs"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
-// SmartContract provides functions for managing a car
 type SmartContract struct {
 	contractapi.Contract
 }
 
-// Car describes basic details of what makes up a car
 type Tran struct {
-	TransactionId       string `json:"transactionid"`
-	To                  string `json:"to"`
-	From                string `json:"from"`
-	Date                string `json:"date"`
-	Amount              string `json:"amount"`
-	TransactionCreateBy string `json:"transactioncreateby"` // this will tell who create the transaction
-	ValidatedBy         string `json:"validatedby"`         // this will tell who is the Validator
-	Validate            string `json:"validate"`            // this will tell transaction is valid or not
-	ViewBy              string `json:"viewby"`              // this will tell who have permissions to View the transaction Details
+	TransactionId string `json:"transactionId"`
+	LandId        string `json:"landId"`
+	Requester     string `json:"requester"`
+	Validar       string `json:"validar"`
+	IsValid       string `json:"isValid"`
+	Status        string `json:"status"`
+	Date          string `json:"date"`
+	Price         string `json:"price"`
 }
 
-type TransactionViewRequest struct { // this struct is user to store request data into SmartContract
-	TransactionId  string `json:"transactionid"`
-	RequestId      string `json:"requestid"`
-	RequestTo      string `json:"requestto"`
-	RequestBy      string `json:"requestby"`
-	RequestProcess string `json:"requestprocess"`
-}
-
-//
-// type QueryResult struct {
-// 	Key    string
-// }
-
-// InitLedger adds a base set of cars to the ledger
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-	_ = ctx.GetStub().PutState("transationCount", []byte(strconv.Itoa(1)))
-	_ = ctx.GetStub().PutState("requestCount", []byte(strconv.Itoa(1)))
-
 	return nil
 }
 
-// CreateCar adds a new car to the world state with given details
-func (s *SmartContract) CreateTransaton(ctx contractapi.TransactionContextInterface, transactionId string, to string, from string, date string, amount string, transactioncreateby string, validatedby string) error {
-	transationCountBytes, _ := ctx.GetStub().GetState("transationCount")
-	transationCount, _ := strconv.Atoi(string(transationCountBytes))
-	transationCount = transationCount + 1
-
+func (s *SmartContract) CreateTransaction(ctx contractapi.TransactionContextInterface,
+	transactionId string, landId string, requester string, validar string, isValid string, status string, date string, price string) error {
 	var transaction = Tran{
-		TransactionId:       transactionId,
-		To:                  to,
-		From:                from,
-		Date:                amount,
-		Amount:              date,
-		TransactionCreateBy: transactioncreateby,
-		ValidatedBy:         validatedby,
-		Validate:            `false`,
-		ViewBy:              ``}
-	transationAsBytes, _ := json.Marshal(transaction)
-	id := transactionId + `-` + string(transationCountBytes)
+		TransactionId: transactionId,
+		LandId:        landId,
+		Requester:     requester,
+		Validar:       validar,
+		IsValid:       isValid,
+		Status:        status,
+		Date:          date,
+		Price:         price,
+	}
+	transactionAsBytes, _ := json.Marshal(transaction)
 
-	_ = ctx.GetStub().PutState("transationCount", []byte(strconv.Itoa(transationCount)))
-	return ctx.GetStub().PutState(id, transationAsBytes)
+	return ctx.GetStub().PutState(transactionId, transactionAsBytes)
 }
 
-/*
-this function required two parameter one is transaction id and other will be userid to check the permission
-*/
-
-func (s *SmartContract) QueryTransation(ctx contractapi.TransactionContextInterface, transactionId string, viewBy string) *Tran {
-	transationAsBytes, err := ctx.GetStub().GetState(transactionId)
+func (s *SmartContract) QueryTransaction(ctx contractapi.TransactionContextInterface, transactionId string) (*Tran, error) {
+	transactionAsBytes, err := ctx.GetStub().GetState(transactionId)
 
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to read from world state: %s", err.Error())
 	}
-	if transationAsBytes == nil {
-		return nil
+
+	if transactionAsBytes == nil {
+		return nil, fmt.Errorf("%s does not exist", transactionId)
 	}
 
 	transaction := new(Tran)
-	_ = json.Unmarshal(transationAsBytes, transaction)
+	_ = json.Unmarshal(transactionAsBytes, transaction)
 
-	if transaction.ValidatedBy == viewBy {
-		return transaction
-	} else {
-		index := strings.Index(transaction.ViewBy, viewBy)
-		if index > -1 {
-			return transaction
-		} else {
-			return nil
+	return transaction, nil
+}
+
+func (s *SmartContract) QueryTransactionByKey(ctx contractapi.TransactionContextInterface, key string, value string) ([]Tran, error) {
+	startKey := ""
+	endKey := ""
+
+	resultsIterator, err := ctx.GetStub().GetStateByRange(startKey, endKey)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	var results []Tran
+
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+
+		if err != nil {
+			return nil, err
+		}
+
+		transaction := new(Tran)
+		_ = json.Unmarshal(queryResponse.Value, transaction)
+
+		transactionMap := structs.Map(transaction)
+
+		// return landMap, nil
+
+		target, _ := transactionMap[cases.Title(language.Und, cases.NoLower).String(key)].(string)
+
+		// return []string{target, value, cases.Title(language.Und, cases.NoLower).String(key)}, nil
+
+		if target == value {
+			results = append(results, *transaction)
 		}
 	}
+
+	return results, nil
+}
+
+func (s *SmartContract) ValidTransaction(ctx contractapi.TransactionContextInterface, transactionId string, status string) error {
+	transaction, err := s.QueryTransaction(ctx, transactionId)
+
+	if err != nil {
+		return err
+	}
+
+	if status == "1" {
+		transaction.Status = "1"
+		transaction.IsValid = "true"
+	} else {
+		transaction.Status = status
+		transaction.IsValid = "false"
+	}
+
+	transactionAsBytes, _ := json.Marshal(transaction)
+	return ctx.GetStub().PutState(transactionId, transactionAsBytes)
 }
 
 func main() {
