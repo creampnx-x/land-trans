@@ -144,31 +144,31 @@ func BaseInvoke(network *gateway.Network, info Information) (string, error) {
 // 	println(result)
 // }
 
-// func queryTransaction(network *gateway.Network, transactionId string) {
-// 	info := Information{"tran", "QueryTransaction", []string{transactionId}}
-// 	result, err := BaseQuery(network, info)
+func queryTransaction(network *gateway.Network, transactionId string) {
+	info := Information{"tran", "QueryTransaction", []string{transactionId}}
+	result, err := BaseQuery(network, info)
 
-// 	if err != nil {
-// 		println(err)
-// 		os.Exit(1)
-// 	}
+	if err != nil {
+		println(err)
+		os.Exit(1)
+	}
 
-// 	println("==============流转信息返回==============")
-// 	println(result)
-// }
+	println("==============流转信息返回==============")
+	println(result)
+}
 
-// func validTransaction(network *gateway.Network, transactionId string, status string) {
-// 	info := Information{"tran", "ValidTransaction", []string{transactionId, status}}
-// 	result, err := BaseInvoke(network, info)
+func validTransaction(network *gateway.Network, transactionId string, status string) {
+	info := Information{"tran", "ValidTransaction", []string{transactionId, status}}
+	result, err := BaseInvoke(network, info)
 
-// 	if err != nil {
-// 		println(err)
-// 		os.Exit(1)
-// 	}
+	if err != nil {
+		println(err)
+		os.Exit(1)
+	}
 
-// 	println("==============通过流转成功==============")
-// 	println(result)
-// }
+	println("==============通过流转成功==============")
+	println(result)
+}
 
 // func queryTransactionByKey(network *gateway.Network, key string, value string) {
 // 	info := Information{"tran", "QueryTransactionByKey", []string{key, value}}

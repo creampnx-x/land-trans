@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/md5"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,7 @@ func CreateLand(c *gin.Context) {
 	var body struct {
 		Position      string `json:"position" binding:"required"`
 		LandId        string `json:"landId" binding:"required"`
-		Owner         string `json:"Owner" binding:"required"`
+		Owner         string `json:"owner" binding:"required"`
 		Valid         string `json:"valid" binding:"required"`
 		InTransaction string `json:"inTransaction" binding:"required"`
 	}
@@ -34,18 +33,8 @@ func CreateLand(c *gin.Context) {
 	// fixme: 应该放在链码内部
 	sameLand, _ := BaseQuery(network, Information{"land", "QueryLand", []string{body.LandId}})
 	if sameLand != "" {
-
-		// 如果冲突判断是否存在相同的土地
-		o := []byte(body.Position + body.Owner)
-		x := md5.Sum(o)
-		newId := string(x[:])
-
-		if newId == body.LandId {
-			c.JSON(http.StatusBadRequest, Response{"fail", "The land already exist.", nil})
-			return
-		}
-
-		body.LandId = newId
+		c.JSON(http.StatusBadRequest, Response{"fail", "The land already exist.", nil})
+		return
 	}
 
 	// 上链
@@ -65,7 +54,7 @@ func ValidLand(c *gin.Context) {
 
 	landId, isMatch := c.Params.Get("landId")
 	if isMatch {
-		result, err := BaseInvoke(network, Information{"land", "VaildLand", []string{landId}})
+		result, err := BaseInvoke(network, Information{"land", "ValidLand", []string{landId}})
 		if err != nil {
 			c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 			return
@@ -118,7 +107,6 @@ func QueryLand(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 			return
 		}
-
 		c.JSON(http.StatusOK, Response{"ok", "", result})
 	} else {
 		c.JSON(http.StatusBadRequest, Response{"fail", "land id is required.", nil})

@@ -102,12 +102,19 @@ func (s *SmartContract) QueryTransactionByKey(ctx contractapi.TransactionContext
 	return results, nil
 }
 
-func (s *SmartContract) ValidTransaction(ctx contractapi.TransactionContextInterface, transactionId string, status string) error {
-	transaction, err := s.QueryTransaction(ctx, transactionId)
+func (s *SmartContract) ValidTransaction(ctx contractapi.TransactionContextInterface, transactionId string, status string) (string, error) {
+	transactionAsBytes, err := ctx.GetStub().GetState(transactionId)
 
 	if err != nil {
-		return err
+		return "", fmt.Errorf("failed to read from world state: %s", err.Error())
 	}
+
+	if transactionAsBytes == nil {
+		return "", fmt.Errorf("%s does not exist", transactionId)
+	}
+
+	transaction := new(Tran)
+	_ = json.Unmarshal(transactionAsBytes, transaction)
 
 	if status == "1" {
 		transaction.Status = "1"
@@ -117,8 +124,8 @@ func (s *SmartContract) ValidTransaction(ctx contractapi.TransactionContextInter
 		transaction.IsValid = "false"
 	}
 
-	transactionAsBytes, _ := json.Marshal(transaction)
-	return ctx.GetStub().PutState(transactionId, transactionAsBytes)
+	transactionAsBytes, _ = json.Marshal(transaction)
+	return transaction.LandId, ctx.GetStub().PutState(transactionId, transactionAsBytes)
 }
 
 func main() {

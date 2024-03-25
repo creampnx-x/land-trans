@@ -55,7 +55,7 @@ func CreateTransaction(c *gin.Context) {
 	BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransaction", "true"}})
 
 	result, err := BaseInvoke(network, Information{"tran", "CreateTransaction", []string{
-		body.TransactionId, body.LandId, body.Requester, body.Validar, body.IsValid, body.Date, body.Price,
+		body.TransactionId, body.LandId, body.Requester, body.Validar, body.IsValid, body.Status, body.Date, body.Price,
 	}})
 
 	if err != nil {
@@ -93,7 +93,10 @@ func ValidTransaction(c *gin.Context) {
 	// fixme: 当交易结束应当取消所有请求交易本土地的请求
 	// 或者 将在交易中的土地锁起来 [use this to fix]
 
-	_, err := BaseInvoke(network, Information{"tran", "ValidTransaction", []string{body.TransactionId, body.Status}})
+	println(body.TransactionId)
+	println(body.Status)
+
+	landId, err := BaseInvoke(network, Information{"tran", "ValidTransaction", []string{body.TransactionId, body.Status}})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 		return
@@ -106,7 +109,7 @@ func ValidTransaction(c *gin.Context) {
 	}
 
 	// 进行所有权转让
-	result, err := BaseInvoke(network, Information{"land", "UpdateLand", []string{body.TransactionId, "owner", body.Requester}})
+	result, err := BaseInvoke(network, Information{"land", "UpdateLand", []string{landId, "owner", body.Requester}})
 	if err != nil {
 		// 交易回退状态
 		BaseInvoke(network, Information{"tran", "ValidTransaction", []string{body.TransactionId, "0"}})

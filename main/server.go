@@ -77,7 +77,7 @@ func Cors() gin.HandlerFunc {
 /************************************  modal  *************************************/
 
 type Response struct {
-	status string
-	info   string
-	data   interface{}
+	Status string      `json:"status"`
+	Info   string      `json:"info"`
+	Data   interface{} `json:"data"`
 }
