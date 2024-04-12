@@ -12,16 +12,18 @@ import (
 func CreateTransaction(c *gin.Context) {
 	network := GetNetwork()
 
+	// status 代表交易状态 -2 - -1 - 0 - 1 分别代表 [已取消、已拒绝、交易中、已成交]
 	var body struct {
 		TransactionId string `json:"transactionId" binding:"required"`
 		LandId        string `json:"landId" binding:"required"`
 		Requester     string `json:"requester" binding:"required"`
 		Validar       string `json:"validar" binding:"required"`
 		IsValid       string `json:"isValid" binding:"required"`
-		// status 代表交易状态 -2 - -1 - 0 - 1 分别代表 [已取消、已拒绝、交易中、已成交]
-		Status string `json:"status" binding:"required"`
-		Date   string `json:"date" binding:"required"`
-		Price  string `json:"price" binding:"required"`
+		Status        string `json:"status" binding:"required"`
+		Date          string `json:"date" binding:"required"`
+		Price         string `json:"price" binding:"required"`
+		Name          string `json:"name" binding:"required"`
+		Person        string `json:"person" binding:"required"`
 	}
 
 	// 检查字段并绑定
@@ -56,6 +58,7 @@ func CreateTransaction(c *gin.Context) {
 
 	result, err := BaseInvoke(network, Information{"tran", "CreateTransaction", []string{
 		body.TransactionId, body.LandId, body.Requester, body.Validar, body.IsValid, body.Status, body.Date, body.Price,
+		body.Name, body.Person,
 	}})
 
 	if err != nil {

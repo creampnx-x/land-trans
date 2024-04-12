@@ -1,7 +1,5 @@
 Installed chaincodes on peer:
-Package ID: land_1:a4b0375938e5b60a8d713a3b5cd0ac1082250c3181e209fea22eacb903426a48, Label: land_1
-Package ID: users_2:eb2d2d3db8004e98de252ce53d492d73215146815f618d68dbc873f05dfd0c0b, Label: users_2
-Package ID: tran_2:d9caf24c723017b04b7549b7de04244199890c177a768e2a1045e9b197a99b3f, Label: tran_2
-Package ID: land_2:4dde07e59b1e6b72dc7d367adc9a34b1d86d47cb28ab7b446b0f5d54d17c55a4, Label: land_2
-Package ID: users_1:270350f198246decb4eed0556d382a52191936f71eb206aff1f44e9169c80838, Label: users_1
-Package ID: tran_1:d75b1ba8a4f8ec4a1f73faacc68bc9dce6499fad386e40331b270f26c898f5de, Label: tran_1
+Package ID: users_1:979872fcc2205564ea798b1b9b9a145ba1636abbd2e24015b3194b53e243a2c7, Label: users_1
+Package ID: tran_1:49f70f4f6a28dd08a254d30e1a492c6a4de66cc6cbf04020e8789677b3f3288b, Label: tran_1
+Package ID: land_1:079728d5f7da7498dac54aa9bed9c1003681bed1155f1500a2227e4935185ee2, Label: land_1
+Package ID: land_2:db48785dc4dad5dc5ec39b067077f4e900491d8490c484998c8101e632119e97, Label: land_2

@@ -24,32 +24,43 @@ export default [
   },
   {
     path: '/welcome',
-    name: 'welcome',
+    name: '首页',
     icon: 'smile',
     component: './Welcome',
   },
   {
-    path: '/admin',
-    name: 'admin',
-    icon: 'crown',
-    access: 'canAdmin',
-    routes: [
-      {
-        path: '/admin',
-        redirect: '/admin/sub-page',
-      },
-      {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        component: './Admin',
-      },
-    ],
-  },
-  {
-    name: 'list.table-list',
+    name: '土地',
     icon: 'table',
     path: '/list',
     component: './TableList',
+  },
+  {
+    path: '/assets',
+    name: '我的资产',
+    icon: 'crown',
+    // access: 'canAdmin',
+    routes: [
+      {
+        path: '/assets',
+        redirect: '/assets/my-land',
+      },
+      {
+        path: '/assets/my-land',
+        name: '土地',
+        component: './Admin',
+      },
+      {
+        path: '/assets/my-transaction',
+        name: '交易',
+        component: './Transaction',
+      }
+    ],
+  },
+  {
+    path: '/transaction-info',
+    name: '交易详情页',
+    component: './TransactionInfo',
+    hideInMenu: true
   },
   {
     path: '/',

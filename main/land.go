@@ -17,6 +17,10 @@ func CreateLand(c *gin.Context) {
 		Owner         string `json:"owner" binding:"required"`
 		Valid         string `json:"valid" binding:"required"`
 		InTransaction string `json:"inTransaction" binding:"required"`
+		Size          string `json:"size" binding:"required"`
+		Price         string `json:"price" binding:"required"`
+		Image         string `json:"image" binding:"required"`
+		Lng           string `json:"lng" binding:"required"`
 	}
 
 	// 检查字段
@@ -39,7 +43,7 @@ func CreateLand(c *gin.Context) {
 
 	// 上链
 	result, err := BaseInvoke(network, Information{"land", "CreateLand", []string{
-		body.Position, body.LandId, body.Owner, body.Valid, body.InTransaction,
+		body.Position, body.LandId, body.Owner, body.Valid, body.InTransaction, body.Size, body.Price, body.Image, body.Lng,
 	}})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
@@ -119,7 +123,7 @@ func QueryLandByKey(c *gin.Context) {
 	key := c.Query("key")
 	value := c.Query("value")
 
-	if key != "" && value != "" {
+	if (key != "" && value != "") || (key == "all") {
 		// 查链
 		result, err := BaseQuery(network, Information{"land", "QueryLandByKey", []string{key, value}})
 

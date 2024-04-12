@@ -1,7 +1,12 @@
-import { PageContainer } from '@ant-design/pro-components';
+import { PageContainer, ProDescriptions, ProList } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import { Card, theme } from 'antd';
-import React from 'react';
+import { Card, Drawer, Progress, Tag, message, theme } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { formatDateTime, statusMap } from './Transaction';
+import TransactionInfo from './TransactionInfo';
+import LandDescription from './LandDescription';
+import { getAllTransactionList, getLand } from '@/services/request';
+// import { getLandInfo } from './Admin';
 
 /**
  * 每个单独的卡片，为了复用样式抽成了组件
@@ -76,9 +81,9 @@ const InfoCard: React.FC<{
       >
         {desc}
       </div>
-      <a href={href} target="_blank" rel="noreferrer">
+      {/* <a href={href} target="_blank" rel="noreferrer">
         了解更多 {'>'}
-      </a>
+      </a> */}
     </div>
   );
 };
@@ -86,6 +91,44 @@ const InfoCard: React.FC<{
 const Welcome: React.FC = () => {
   const { token } = theme.useToken();
   const { initialState } = useModel('@@initialState');
+
+  const [transitions, setTransactions] = useState<any>([]);
+  const [land, setLand] = useState<any>({});
+  const [transaction, setTransaction] = useState<any>({});
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = (value: any) => {
+    setOpen(true);
+    setTransaction(value);
+    getLand(value.landId).then((res) => {
+      if (res.status === 'ok') {
+        const __data__ = JSON.parse(res.data === '' ? "{}" : res.data);
+
+        setLand(__data__);
+      } else {
+        message.error(res.info);
+      }
+    })
+  };
+
+  const onClose = () => {
+    setOpen(false);
+    setLand({});
+  };
+
+  useEffect(() => {
+    getAllTransactionList().then((res: any) => {
+      if (res.status === 'ok') {
+        const __data__ = JSON.parse(res.data === '' ? "[]" : res.data);
+
+        setTransactions(__data__?.slice(0, 10) ?? []);
+      } else {
+        message.error(res.info);
+      }
+    })
+  }, [])
+
+
   return (
     <PageContainer>
       <Card
@@ -114,7 +157,7 @@ const Welcome: React.FC = () => {
               color: token.colorTextHeading,
             }}
           >
-            欢迎使用 Ant Design Pro
+            欢迎使用土地流转系统
           </div>
           <p
             style={{
@@ -126,8 +169,7 @@ const Welcome: React.FC = () => {
               width: '65%',
             }}
           >
-            Ant Design Pro 是一个整合了 umi，Ant Design 和 ProComponents
-            的脚手架方案。致力于在设计规范和基础组件的基础上，继续向上构建，提炼出典型模板/业务组件/配套设计资源，进一步提升企业级中后台产品设计研发过程中的『用户』和『设计者』的体验。
+            本土地流转系统使用了区块链技术，基于Hyperledger Fabric框架的搭建，提供了包括了土地的登记、土地信息浏览和流转的功能。
           </p>
           <div
             style={{
@@ -139,25 +181,139 @@ const Welcome: React.FC = () => {
             <InfoCard
               index={1}
               href="https://umijs.org/docs/introduce/introduce"
-              title="了解 umi"
-              desc="umi 是一个可扩展的企业级前端应用框架,umi 以路由为基础的，同时支持配置式路由和约定式路由，保证路由的功能完备，并以此进行功能扩展。"
+              title="土地登记"
+              desc="上传你的土地信息以及相关的证明信息，等待管理员的验证通过，后就可以进入土地流转市场供用户查看，用户可以查看土地的信息以及流转的记录。"
             />
             <InfoCard
               index={2}
-              title="了解 ant design"
+              title="土地流转"
               href="https://ant.design"
-              desc="antd 是基于 Ant Design 设计体系的 React UI 组件库，主要用于研发企业级中后台产品。"
+              desc="查看市场中可以流转的土地，发起流转请求，等待土地拥有者的同意后土地的归属权将会立即发生改变你，并且将会通知区块链联盟中的其他组织。"
             />
             <InfoCard
               index={3}
-              title="了解 Pro Components"
+              title="管理资产"
               href="https://procomponents.ant.design"
-              desc="ProComponents 是一个基于 Ant Design 做了更高抽象的模板组件，以 一个组件就是一个页面为开发理念，为中后台开发带来更好的体验。"
+              desc="在本系统中可以管理自己上传的与流转到自己名下的土地，同时也能管理自己发起的交易与需要处理的交易申请。"
             />
           </div>
         </div>
       </Card>
-    </PageContainer>
+
+
+
+
+      <Card
+        style={{
+          borderRadius: 8,
+          marginTop: '2em'
+        }}
+      >
+        <div
+          style={{
+            fontSize: '20px',
+            color: token.colorTextHeading,
+          }}
+        >
+          正在发生的交易
+        </div>
+
+        <ProList<any>
+          ghost={false}
+          itemCardProps={{
+            ghost: false,
+          }}
+          pagination={false}
+          showActions="hover"
+          rowSelection={false}
+          grid={{ gutter: 16, column: 2 }}
+          onItem={(record: any) => {
+            return {
+              onMouseEnter: () => {
+                console.log(record);
+              },
+              onClick: () => {
+                console.log(record);
+              },
+            };
+          }}
+          metas={{
+            title: {},
+            subTitle: {},
+            type: {},
+            avatar: {},
+            content: {},
+            actions: {
+              cardActionProps: 'extra',
+            },
+          }}
+          headerTitle=""
+          dataSource={(() => {
+            return transitions.map((v: any) => {
+              return {
+                ...v,
+                title: v.name,
+                subTitle: <Tag color={statusMap[String(v.status)].color}>{statusMap[String(v.status)].content}</Tag>,
+                actions: [<a key="run" onClick={() => { showDrawer(v) }}>详情</a>],
+                avatar: "https://gw.alipayobjects.com/zos/antfincdn/UCSiy1j6jx/xingzhuang.svg",
+                content: (
+                  <div>
+                    <ProDescriptions
+                      column={2}
+                    >
+                      <ProDescriptions.Item label="发起流转人" valueType="text">
+                        {v.requester}
+                      </ProDescriptions.Item>
+                      <ProDescriptions.Item label="土地拥有人" valueType="text">
+                        {v.validar}
+                      </ProDescriptions.Item>
+
+
+                      <ProDescriptions.Item
+                        span={1}
+                        valueType="text"
+                        contentStyle={{
+                          // maxWidth: '80%',
+                        }}
+                        ellipsis
+                        label="流转 ID"
+                      >
+                        {v.transitionId}
+                      </ProDescriptions.Item>
+
+                      <ProDescriptions.Item
+                        label="土地 ID"
+                        valueType="text"
+                      >
+                        {v.landId}
+                      </ProDescriptions.Item>
+
+                      <ProDescriptions.Item label="出价" valueType="money">
+                        {v.price}
+                      </ProDescriptions.Item>
+
+                      <ProDescriptions.Item label="日期" valueType="text">
+                        {formatDateTime(new Date(Number(v.date)))}
+                      </ProDescriptions.Item>
+                    </ProDescriptions>
+                  </div>
+                )
+              }
+            })
+          })()}
+        />
+      </Card>
+
+
+
+      <Drawer title="交易详情" onClose={onClose} open={open} width={800}>
+        <TransactionInfo transaction={transaction} />
+
+        <LandDescription land={land} />
+      </Drawer>
+
+
+    </PageContainer >
   );
 };
 

@@ -1,123 +1,69 @@
 import { addRule, removeRule, rule, updateRule } from '@/services/ant-design-pro/api';
 import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns, ProDescriptionsItemProps } from '@ant-design/pro-components';
+import type { ActionType, FormInstance, ProColumns, ProDescriptionsItemProps } from '@ant-design/pro-components';
 import {
-  FooterToolbar,
-  ModalForm,
   PageContainer,
-  ProDescriptions,
-  ProFormText,
-  ProFormTextArea,
   ProTable,
 } from '@ant-design/pro-components';
-import { FormattedMessage, useIntl } from '@umijs/max';
-import { Button, Drawer, Input, message } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, Drawer, Input, Popover, message } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
 import type { FormValueType } from './components/UpdateForm';
-import UpdateForm from './components/UpdateForm';
+// import UpdateForm from './components/UpdateForm';
+import LandDescription from '../LandDescription';
+// import { getLandInfo } from '../Admin';
+import LandRegister from '../LandRegister';
+import CreateTransaction from '../CreateTransaction';
+import TransactionInfo from '../TransactionInfo';
+import { UpdateLand, getAllLandList, getLandListByKey, getTransactionListByKey } from '@/services/request';
 
-/**
- * @en-US Add node
- * @zh-CN 添加节点
- * @param fields
- */
-const handleAdd = async (fields: API.RuleListItem) => {
-  const hide = message.loading('正在添加');
-  try {
-    await addRule({ ...fields });
-    hide();
-    message.success('Added successfully');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('Adding failed, please try again!');
-    return false;
-  }
-};
 
-/**
- * @en-US Update node
- * @zh-CN 更新节点
- *
- * @param fields
- */
-const handleUpdate = async (fields: FormValueType) => {
-  const hide = message.loading('Configuring');
-  try {
-    await updateRule({
-      name: fields.name,
-      desc: fields.desc,
-      key: fields.key,
-    });
-    hide();
 
-    message.success('Configuration is successful');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('Configuration failed, please try again!');
-    return false;
-  }
-};
 
-/**
- *  Delete node
- * @zh-CN 删除节点
- *
- * @param selectedRows
- */
-const handleRemove = async (selectedRows: API.RuleListItem[]) => {
-  const hide = message.loading('正在删除');
-  if (!selectedRows) return true;
-  try {
-    await removeRule({
-      key: selectedRows.map((row) => row.key),
-    });
-    hide();
-    message.success('Deleted successfully and will refresh soon');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('Delete failed, please try again');
-    return false;
-  }
-};
 
 const TableList: React.FC = () => {
-  /**
-   * @en-US Pop-up window of new window
-   * @zh-CN 新建窗口的弹窗
-   *  */
   const [createModalOpen, handleModalOpen] = useState<boolean>(false);
-  /**
-   * @en-US The pop-up window of the distribution update window
-   * @zh-CN 分布更新窗口的弹窗
-   * */
   const [updateModalOpen, handleUpdateModalOpen] = useState<boolean>(false);
-
   const [showDetail, setShowDetail] = useState<boolean>(false);
-
+  const [currentRow, setCurrentRow] = useState<any>();
+  const [transitions, setTransactions] = useState<any>();
+  const [openPass, setOpenPass] = useState(false);
+  const [openNoPass, setOpenNoPass] = useState(false);
   const actionRef = useRef<ActionType>();
-  const [currentRow, setCurrentRow] = useState<API.RuleListItem>();
-  const [selectedRowsState, setSelectedRows] = useState<API.RuleListItem[]>([]);
+  const formRef = useRef<FormInstance>();
+  const userInfo = JSON.parse(sessionStorage.getItem('user_info')!);
+
+  useEffect(() => {
+    // console.log('rereqq' , currentRow)
+    if (!currentRow || !currentRow.landId)
+      return;
+
+    getTransactionListByKey({
+      key: 'landId',
+      value: currentRow.landId
+    }).then((res) => {
+      // console.log(res);
+      if (res.status !== 'ok')
+        message.error(res.info)
+      else {
+        const __data__ = JSON.parse(res.data === '' ? "[]" : res.data);
+        console.log('1111', __data__);
+        setTransactions(__data__);
+      }
+    });
+
+  }, [showDetail])
 
   /**
    * @en-US International configuration
    * @zh-CN 国际化配置
    * */
-  const intl = useIntl();
 
-  const columns: ProColumns<API.RuleListItem>[] = [
+  const columns = [
     {
-      title: (
-        <FormattedMessage
-          id="pages.searchTable.updateForm.ruleName.nameLabel"
-          defaultMessage="Rule name"
-        />
-      ),
-      dataIndex: 'name',
-      tip: 'The rule name is the unique key',
-      render: (dom, entity) => {
+      title: "位置",
+      dataIndex: 'position',
+      tip: '土地的区县范围位置',
+      render: (dom: any, entity: any) => {
         return (
           <a
             onClick={() => {
@@ -125,130 +71,121 @@ const TableList: React.FC = () => {
               setShowDetail(true);
             }}
           >
-            {dom}
+            {entity.position.replaceAll(',', '-')}
           </a>
         );
       },
     },
     {
-      title: <FormattedMessage id="pages.searchTable.titleDesc" defaultMessage="Description" />,
-      dataIndex: 'desc',
-      valueType: 'textarea',
+      title: "拥有者",
+      dataIndex: 'owner',
     },
     {
-      title: (
-        <FormattedMessage
-          id="pages.searchTable.titleCallNo"
-          defaultMessage="Number of service calls"
-        />
-      ),
-      dataIndex: 'callNo',
-      sorter: true,
-      hideInForm: true,
-      renderText: (val: string) =>
-        `${val}${intl.formatMessage({
-          id: 'pages.searchTable.tenThousand',
-          defaultMessage: ' 万 ',
-        })}`,
+      title: "大小",
+      dataIndex: 'size',
+      hideInSearch: true
     },
     {
-      title: <FormattedMessage id="pages.searchTable.titleStatus" defaultMessage="Status" />,
-      dataIndex: 'status',
+      title: "标价",
+      dataIndex: 'price',
+      hideInSearch: true
+    },
+    {
+      title: "验证",
+      dataIndex: 'valid',
       hideInForm: true,
       valueEnum: {
-        0: {
-          text: (
-            <FormattedMessage
-              id="pages.searchTable.nameStatus.default"
-              defaultMessage="Shut down"
-            />
-          ),
-          status: 'Default',
-        },
-        1: {
-          text: (
-            <FormattedMessage id="pages.searchTable.nameStatus.running" defaultMessage="Running" />
-          ),
-          status: 'Processing',
-        },
-        2: {
-          text: (
-            <FormattedMessage id="pages.searchTable.nameStatus.online" defaultMessage="Online" />
-          ),
+        Yes: {
+          text: "已审核",
           status: 'Success',
         },
-        3: {
-          text: (
-            <FormattedMessage
-              id="pages.searchTable.nameStatus.abnormal"
-              defaultMessage="Abnormal"
-            />
-          ),
+        No: {
+          text: "未审核",
+          status: 'Processing',
+        },
+        Error: {
+          text: "不通过",
           status: 'Error',
         },
       },
     },
     {
-      title: (
-        <FormattedMessage
-          id="pages.searchTable.titleUpdatedAt"
-          defaultMessage="Last scheduled time"
-        />
-      ),
-      sorter: true,
-      dataIndex: 'updatedAt',
-      valueType: 'dateTime',
-      renderFormItem: (item, { defaultRender, ...rest }, form) => {
-        const status = form.getFieldValue('status');
-        if (`${status}` === '0') {
-          return false;
+      title: "流转状态",
+      dataIndex: 'inTransaction',
+      hideInForm: true,
+      valueEnum: {
+        true: {
+          text: "流转中",
+          status: 'Processing',
+        },
+        false: {
+          text: "可流转",
+          status: 'Success',
         }
-        if (`${status}` === '3') {
-          return (
-            <Input
-              {...rest}
-              placeholder={intl.formatMessage({
-                id: 'pages.searchTable.exception',
-                defaultMessage: 'Please enter the reason for the exception!',
-              })}
-            />
-          );
-        }
-        return defaultRender(item);
       },
     },
     {
-      title: <FormattedMessage id="pages.searchTable.titleOption" defaultMessage="Operating" />,
+      title: "Operating",
       dataIndex: 'option',
       valueType: 'option',
-      render: (_, record) => [
-        <a
-          key="config"
-          onClick={() => {
-            handleUpdateModalOpen(true);
-            setCurrentRow(record);
-          }}
-        >
-          <FormattedMessage id="pages.searchTable.config" defaultMessage="Configuration" />
-        </a>,
-        <a key="subscribeAlert" href="https://procomponents.ant.design/">
-          <FormattedMessage
-            id="pages.searchTable.subscribeAlert"
-            defaultMessage="Subscribe to alerts"
-          />
-        </a>,
-      ],
+      render: (_: any, record: any) => (
+        userInfo.userid !== 'admin' ? [
+          <a
+            key="流转"
+            onClick={() => {
+              handleUpdateModalOpen(true);
+              setCurrentRow(record);
+            }}
+          >
+            申请交易
+          </a>
+        ] : [
+          <Button key="yanzheng"
+            type="link"
+            disabled={record.valid === 'Yes'}
+            onClick={() => {
+              UpdateLand({
+                landId: record.landId,
+                key: 'valid',
+                value: 'Yes'
+              }).then(res => {
+                if (res.status !== 'ok')
+                  message.error(res.info)
+                else
+                  setOpenPass(false);
+
+                actionRef.current?.reload();
+              })
+            }}
+          >通过验证</Button>,
+
+          <Button key="no" type="link"
+            disabled={record.valid === 'Error'}
+            onClick={() => {
+              UpdateLand({
+                landId: record.landId,
+                key: 'valid',
+                value: 'Error'
+              }).then(res => {
+                if (res.status !== 'ok')
+                  message.error(res.info)
+                else
+                  setOpenPass(false);
+
+                actionRef.current?.reload();
+              })
+            }}>不通过</Button>,
+        ]
+      ),
     },
   ];
 
   return (
     <PageContainer>
-      <ProTable<API.RuleListItem, API.PageParams>
-        headerTitle={intl.formatMessage({
-          id: 'pages.searchTable.title',
-          defaultMessage: 'Enquiry form',
-        })}
+      <ProTable
+        headerTitle={'所有土地'}
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="key"
         search={{
           labelWidth: 120,
@@ -257,36 +194,85 @@ const TableList: React.FC = () => {
           <Button
             type="primary"
             key="primary"
+            disabled={userInfo.userid === 'admin'}
             onClick={() => {
               handleModalOpen(true);
             }}
           >
-            <PlusOutlined /> <FormattedMessage id="pages.searchTable.new" defaultMessage="New" />
+            <PlusOutlined /> 土地登记
           </Button>,
         ]}
-        request={rule}
-        columns={columns}
-        rowSelection={{
-          onChange: (_, selectedRows) => {
-            setSelectedRows(selectedRows);
-          },
+        request={async () => {
+          const value = formRef.current?.getFieldsValue();
+          const p: any = {};
+          for (let item in value) {
+            if (value[item]) {
+              p['key'] = item
+              p['value'] = value[item]
+              break
+            }
+          }
+
+          let res;
+          if (p['key'] && p['key'] !== 'position')
+            res = await getLandListByKey({
+              key: p['key'],
+              value: p['value']
+            })
+          else
+            res = await getAllLandList();
+
+          if (res.status === 'ok') {
+            const __data__: any[] = JSON.parse(res.data === '' ? "[]" : res.data);
+
+            const d = [];
+
+            for (let element of __data__) {
+              if (value.position && element.position.indexOf(value['position']) == -1)
+                continue
+              if (value.owner && element.owner !== value.owner)
+                continue
+              if (value.inTransaction && element.inTransaction !== value.inTransaction)
+                continue
+              if (value.valid && element.valid !== value.valid)
+                continue
+
+              console.log(element);
+              d.push(element)
+            }
+
+            console.log(__data__)
+
+            return {
+              success: true,
+              data: d,
+              total: __data__.length
+            }
+          }
+
+          return {
+            success: false
+          }
         }}
+        columns={columns}
+      // rowSelection={{
+      //   onChange: (_, selectedRows) => {
+      //     setSelectedRows(selectedRows as any);
+      //   },
+      // }}
       />
-      {selectedRowsState?.length > 0 && (
+      {/* {selectedRowsState?.length > 0 && (
         <FooterToolbar
           extra={
             <div>
-              <FormattedMessage id="pages.searchTable.chosen" defaultMessage="Chosen" />{' '}
+              Chosen{' '}
               <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a>{' '}
-              <FormattedMessage id="pages.searchTable.item" defaultMessage="项" />
+              项
               &nbsp;&nbsp;
               <span>
-                <FormattedMessage
-                  id="pages.searchTable.totalServiceCalls"
-                  defaultMessage="Total number of service calls"
-                />{' '}
+                Total number of service calls{' '}
                 {selectedRowsState.reduce((pre, item) => pre + item.callNo!, 0)}{' '}
-                <FormattedMessage id="pages.searchTable.tenThousand" defaultMessage="万" />
+                万
               </span>
             </div>
           }
@@ -298,74 +284,17 @@ const TableList: React.FC = () => {
               actionRef.current?.reloadAndRest?.();
             }}
           >
-            <FormattedMessage
-              id="pages.searchTable.batchDeletion"
-              defaultMessage="Batch deletion"
-            />
+            Batch deletion
           </Button>
           <Button type="primary">
-            <FormattedMessage
-              id="pages.searchTable.batchApproval"
-              defaultMessage="Batch approval"
-            />
+            Batch approval
           </Button>
         </FooterToolbar>
-      )}
-      <ModalForm
-        title={intl.formatMessage({
-          id: 'pages.searchTable.createForm.newRule',
-          defaultMessage: 'New rule',
-        })}
-        width="400px"
-        open={createModalOpen}
-        onOpenChange={handleModalOpen}
-        onFinish={async (value) => {
-          const success = await handleAdd(value as API.RuleListItem);
-          if (success) {
-            handleModalOpen(false);
-            if (actionRef.current) {
-              actionRef.current.reload();
-            }
-          }
-        }}
-      >
-        <ProFormText
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.searchTable.ruleName"
-                  defaultMessage="Rule name is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="name"
-        />
-        <ProFormTextArea width="md" name="desc" />
-      </ModalForm>
-      <UpdateForm
-        onSubmit={async (value) => {
-          const success = await handleUpdate(value);
-          if (success) {
-            handleUpdateModalOpen(false);
-            setCurrentRow(undefined);
-            if (actionRef.current) {
-              actionRef.current.reload();
-            }
-          }
-        }}
-        onCancel={() => {
-          handleUpdateModalOpen(false);
-          if (!showDetail) {
-            setCurrentRow(undefined);
-          }
-        }}
-        updateModalOpen={updateModalOpen}
-        values={currentRow || {}}
-      />
+      )} */}
+
+      <LandRegister createModalOpen={createModalOpen} setCreateModalOpen={(v: boolean) => handleModalOpen(v)} reload={() => actionRef?.current?.reload()} />
+
+      <CreateTransaction createModalOpen={updateModalOpen} setCreateModalOpen={(v: boolean) => handleUpdateModalOpen(v)} land={currentRow || {}} />
 
       <Drawer
         width={600}
@@ -376,19 +305,19 @@ const TableList: React.FC = () => {
         }}
         closable={false}
       >
-        {currentRow?.name && (
-          <ProDescriptions<API.RuleListItem>
-            column={2}
-            title={currentRow?.name}
-            request={async () => ({
-              data: currentRow || {},
-            })}
-            params={{
-              id: currentRow?.name,
-            }}
-            columns={columns as ProDescriptionsItemProps<API.RuleListItem>[]}
-          />
-        )}
+        {
+          // @ts-ignore
+          currentRow?.position && (
+            <>
+              <LandDescription land={currentRow as any} />
+
+              {transitions?.map((transition: any, index: number) => {
+                // console.log(transition);
+                return <TransactionInfo transaction={transition} title={index === 0 ? "交易记录" : null} />
+              })}
+            </>
+          )
+        }
       </Drawer>
     </PageContainer>
   );

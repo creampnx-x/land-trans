@@ -23,6 +23,8 @@ type Tran struct {
 	Status        string `json:"status"`
 	Date          string `json:"date"`
 	Price         string `json:"price"`
+	Name          string `json:"name"`
+	Person        string `json:"person"`
 }
 
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
@@ -30,7 +32,8 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 }
 
 func (s *SmartContract) CreateTransaction(ctx contractapi.TransactionContextInterface,
-	transactionId string, landId string, requester string, validar string, isValid string, status string, date string, price string) error {
+	transactionId string, landId string, requester string, validar string,
+	isValid string, status string, date string, price string, name string, person string) error {
 	var transaction = Tran{
 		TransactionId: transactionId,
 		LandId:        landId,
@@ -40,6 +43,8 @@ func (s *SmartContract) CreateTransaction(ctx contractapi.TransactionContextInte
 		Status:        status,
 		Date:          date,
 		Price:         price,
+		Name:          name,
+		Person:        person,
 	}
 	transactionAsBytes, _ := json.Marshal(transaction)
 
@@ -88,11 +93,18 @@ func (s *SmartContract) QueryTransactionByKey(ctx contractapi.TransactionContext
 
 		transactionMap := structs.Map(transaction)
 
-		// return landMap, nil
+		if key == "person" {
+			targetR, _ := transactionMap[cases.Title(language.Und, cases.NoLower).String("requester")].(string)
+			targetV, _ := transactionMap[cases.Title(language.Und, cases.NoLower).String("validar")].(string)
+
+			if targetR == value || targetV == value {
+				results = append(results, *transaction)
+			}
+
+			continue
+		}
 
 		target, _ := transactionMap[cases.Title(language.Und, cases.NoLower).String(key)].(string)
-
-		// return []string{target, value, cases.Title(language.Und, cases.NoLower).String(key)}, nil
 
 		if target == value {
 			results = append(results, *transaction)

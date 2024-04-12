@@ -13,7 +13,8 @@ type SmartContract struct {
 }
 
 type Users struct {
-	Name     string `json:"name"`
+	Name string `json:"name"`
+	// fixme: change to userId
 	UserId   string `json:"userid"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
@@ -48,8 +49,10 @@ func (s *SmartContract) QueryUser(ctx contractapi.TransactionContextInterface, u
 	}
 
 	user := new(Users)
+
 	_ = json.Unmarshal(userAsBytes, user)
 
+	user.Password = ""
 	return user, nil
 }
 

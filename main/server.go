@@ -45,11 +45,20 @@ func setupRouter() *gin.Engine {
 
 	r.GET("/land/tran", QueryTransactionByKey)
 
+	/********************* file *****************************/
+
+	r.POST("/land/file", SaveFile)
+
+	r.GET("/land/file/:fileName", GetFile)
+
 	return r
 }
 
 func main() {
 	r := setupRouter()
+
+	network := GetNetwork()
+	CreateAdmin(network)
 
 	r.Run(":8080")
 }

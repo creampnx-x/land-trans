@@ -21,6 +21,11 @@ type Land struct {
 	Owner         string `json:"owner"`
 	Valid         string `json:"valid"`
 	InTransaction string `json:"inTransaction"`
+	Size          string `json:"size"`
+	Price         string `json:"price"`
+	Image         string `json:"image"`
+	Lng           string `json:"lng"`
+	All           string `json:"all"`
 }
 
 // InitLedger adds a base set of cars to the ledger
@@ -28,13 +33,20 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 	return nil
 }
 
-func (s *SmartContract) CreateLand(ctx contractapi.TransactionContextInterface, position string, landId string, owner string, valid string, inTransaction string) error {
+func (s *SmartContract) CreateLand(ctx contractapi.TransactionContextInterface,
+	position string, landId string, owner string, valid string, inTransaction string,
+	size string, price string, image string, lng string) error {
 	land := Land{
 		Position:      position,
 		LandId:        landId,
 		Owner:         owner,
 		Valid:         valid,
 		InTransaction: inTransaction,
+		Size:          size,
+		Price:         price,
+		Image:         image,
+		Lng:           lng,
+		All:           "",
 	}
 
 	landAsBytes, _ := json.Marshal(land)

@@ -15,7 +15,7 @@ import {
   ProFormCheckbox,
   ProFormText,
 } from '@ant-design/pro-components';
-import { FormattedMessage, history, SelectLang, useIntl, useModel, Helmet } from '@umijs/max';
+import { history, useModel, Helmet } from '@umijs/max';
 import { Alert, message, Tabs } from 'antd';
 import Settings from '../../../../config/defaultSettings';
 import React, { useState } from 'react';
@@ -65,7 +65,7 @@ const Lang = () => {
 
   return (
     <div className={styles.lang} data-lang>
-      {SelectLang && <SelectLang />}
+      {}
     </div>
   );
 };
@@ -90,7 +90,6 @@ const Login: React.FC = () => {
   const [type, setType] = useState<string>('login');
   const { initialState, setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
-  const intl = useIntl();
 
   const fetchUserInfo = async () => {
     const userInfo = await initialState?.fetchUserInfo?.();
@@ -104,18 +103,20 @@ const Login: React.FC = () => {
     }
   };
 
+  const urlPrefix = "http://localhost:8080/land"
+
   const handleSubmit = async (values: API.LoginParams) => {
     try {
       // 登录
       if (type === 'login') {
-        const res = await request('http://localhost:3000/land/login', {
+        const res = await request(urlPrefix + "/user/login", {
           method: "POST",
           data: {
             ...values,
           },
         });
-        if (res && res.userid) {
-          sessionStorage.setItem('user_info', JSON.stringify(res));
+        if (res && res.status === "ok") {
+          sessionStorage.setItem('user_info', res.data);
           await fetchUserInfo();
 
           const defaultLoginSuccessMessage = '登录成功！';
@@ -135,16 +136,14 @@ const Login: React.FC = () => {
         }
 
       } else {
-        const res = await request('http://localhost:3000/land/resgiter', {
+        const res = await request(urlPrefix + '/user/register', {
           method: "POST",
           data: {
             ...values,
-            role: 'normal',
-            boss: 'none'
           }
         })
 
-        if (res && res.status === 'success') {
+        if (res && res.status === 'ok') {
           message.success('注册成功！请登录');
           setType('login');
 
@@ -187,9 +186,9 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           submitter={{ searchConfig: { submitText: type === 'login' ? '登录' : '注册' } }}
-          logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
-          subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
+          logo={<img alt="logo" src="/logo-1.png" />}
+          title="土地流转系统"
+          subTitle={"农用地流转"}
           initialValues={{
             autoLogin: true,
           }}
@@ -221,7 +220,7 @@ const Login: React.FC = () => {
           {type === 'login' && (
             <>
               <ProFormText
-                name="user_id"
+                name="userId"
                 fieldProps={{
                   size: 'large',
                   prefix: <UserOutlined />,
@@ -259,7 +258,7 @@ const Login: React.FC = () => {
                   size: 'large',
                   prefix: <MobileOutlined />,
                 }}
-                name="user_id"
+                name="userId"
                 placeholder={"用户ID, 不可与其他用户重复"}
                 rules={[
                   {
@@ -305,7 +304,7 @@ const Login: React.FC = () => {
               }}
             >
               <ProFormCheckbox noStyle name="autoLogin">
-                <FormattedMessage id="pages.login.rememberMe" defaultMessage="自动登录" />
+                自动登录"
               </ProFormCheckbox>
             </div>}
         </LoginForm>
