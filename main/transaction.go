@@ -12,7 +12,7 @@ import (
 func CreateTransaction(c *gin.Context) {
 	network := GetNetwork()
 
-	// status 代表交易状态 -2 - -1 - 0 - 1 分别代表 [已取消、已拒绝、交易中、已成交]
+	// status 代表流转状态 -2 - -1 - 0 - 1 分别代表 [已取消、已拒绝、流转中、已成交]
 	var body struct {
 		TransactionId string `json:"transactionId" binding:"required"`
 		LandId        string `json:"landId" binding:"required"`
@@ -36,7 +36,7 @@ func CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	// 查询土地是否在交易中
+	// 查询土地是否在流转中
 	land, err := BaseQuery(network, Information{"land", "QueryLand", []string{body.LandId}})
 
 	if err != nil {
@@ -47,13 +47,13 @@ func CreateTransaction(c *gin.Context) {
 	var jsonMap map[string]interface{}
 	json.Unmarshal([]byte(land), &jsonMap)
 
-	// 在交易中 - 不得再交易
+	// 在流转中 - 不得再流转
 	if jsonMap["inTransaction"] == "true" {
 		c.JSON(http.StatusBadRequest, Response{"fail", "land already in transition!", nil})
 		return
 	}
 
-	// 不在交易中 - 流转交易状态
+	// 不在流转中 - 流转流转状态
 	BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransaction", "true"}})
 
 	result, err := BaseInvoke(network, Information{"tran", "CreateTransaction", []string{
@@ -64,7 +64,7 @@ func CreateTransaction(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})
 
-		// 回退交易状态
+		// 回退流转状态
 		BaseInvoke(network, Information{"land", "UpdateLand", []string{body.LandId, "inTransaction", "false"}})
 		return
 	}
@@ -93,8 +93,8 @@ func ValidTransaction(c *gin.Context) {
 	}
 
 	// fixme: 应当检查土地的归属
-	// fixme: 当交易结束应当取消所有请求交易本土地的请求
-	// 或者 将在交易中的土地锁起来 [use this to fix]
+	// fixme: 当流转结束应当取消所有请求流转本土地的请求
+	// 或者 将在流转中的土地锁起来 [use this to fix]
 
 	println(body.TransactionId)
 	println(body.Status)
@@ -105,8 +105,10 @@ func ValidTransaction(c *gin.Context) {
 		return
 	}
 
+	BaseInvoke(network, Information{"land", "UpdateLand", []string{landId, "inTransaction", "false"}})
+
 	if body.Status != "1" {
-		// 只有当请求交易完成时，才能继续下面的转让操作
+		// 只有当请求流转完成时，才能继续下面的转让操作
 		c.JSON(http.StatusOK, Response{"ok", "", nil})
 		return
 	}
@@ -114,7 +116,7 @@ func ValidTransaction(c *gin.Context) {
 	// 进行所有权转让
 	result, err := BaseInvoke(network, Information{"land", "UpdateLand", []string{landId, "owner", body.Requester}})
 	if err != nil {
-		// 交易回退状态
+		// 流转回退状态
 		BaseInvoke(network, Information{"tran", "ValidTransaction", []string{body.TransactionId, "0"}})
 
 		c.JSON(http.StatusBadRequest, Response{"fail", err.Error(), nil})

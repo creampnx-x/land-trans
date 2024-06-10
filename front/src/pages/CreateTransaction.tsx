@@ -25,7 +25,7 @@ const CreateTransaction = (props: any) => {
 
     const createTransactionHandler = (value: any) => {
         if (userInfo.userid === land['owner']) {
-            message.error("不能向自己的土地申请交易！")
+            message.error("不能向自己的土地申请流转！")
             return new Promise<any>((resolve, _) => {
                 resolve({
                     status: 'fail'
@@ -34,7 +34,7 @@ const CreateTransaction = (props: any) => {
         }
 
         if (land.valid === 'No' || land.inTransaction === 'true') {
-            message.error("土地未通过审核或已经在交易中了!")
+            message.error("土地未通过审核或已经在流转中了!")
             return new Promise<any>((resolve, _) => {
                 resolve({
                     status: 'fail'
@@ -58,7 +58,7 @@ const CreateTransaction = (props: any) => {
 
     return (
         <ModalForm
-            title="发起交易"
+            title="发起流转"
             width="500px"
             open={createModalOpen}
             onOpenChange={(visible) => {

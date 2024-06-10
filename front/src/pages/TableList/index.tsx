@@ -137,7 +137,7 @@ const TableList: React.FC = () => {
               setCurrentRow(record);
             }}
           >
-            申请交易
+            申请流转
           </a>
         ] : [
           <Button key="yanzheng"
@@ -313,7 +313,7 @@ const TableList: React.FC = () => {
 
               {transitions?.map((transition: any, index: number) => {
                 // console.log(transition);
-                return <TransactionInfo transaction={transition} title={index === 0 ? "交易记录" : null} />
+                return <TransactionInfo transaction={transition} title={index === 0 ? "流转记录" : null} />
               })}
             </>
           )

@@ -117,7 +117,7 @@ const Admin: React.FC = () => {
                 return (
                   <>
                     <Tag color={entity.valid === 'Yes' ? "green" : "red"}> {entity.valid === 'Yes' ? "通过验证" : "未验证"} </Tag>
-                    <Tag color={entity.inTransaction === 'false' ? "blue" : "red"}>{entity.inTransaction === 'false' ? "非交易中" : "交易中"}</Tag>
+                    <Tag color={entity.inTransaction === 'false' ? "blue" : "red"}>{entity.inTransaction === 'false' ? "非流转中" : "流转中"}</Tag>
                   </>
                 )
               }
@@ -194,7 +194,7 @@ const Admin: React.FC = () => {
 
               {transitions?.map((transition: any, index: number) => {
                 console.log(transition);
-                return <TransactionInfo transaction={transition} title={index === 0 ? "交易记录" : null} />
+                return <TransactionInfo transaction={transition} title={index === 0 ? "流转记录" : null} />
               })}
             </>
           )

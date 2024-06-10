@@ -74,11 +74,11 @@ function TransactionInfo(props: { land: LandInfo }) {
                 </ProDescriptions.Item>
 
                 <ProDescriptions.Item
-                    label="交易状态"
+                    label="流转状态"
                     valueEnum={{
-                        true: { text: '交易中', status: 'Processing' },
+                        true: { text: '流转中', status: 'Processing' },
                         false: {
-                            text: '未交易',
+                            text: '未流转',
                             status: 'Default',
                         }
                     }}

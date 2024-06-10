@@ -225,7 +225,7 @@ const Transaction: React.FC = () => {
         />
       </Card>
 
-      <Drawer title="交易详情" onClose={onClose} open={open} width={800}>
+      <Drawer title="流转详情" onClose={onClose} open={open} width={800}>
         <TransactionInfo transaction={transaction} />
 
         <LandDescription land={land} />

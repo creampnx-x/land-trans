@@ -51,14 +51,14 @@ export default [
       },
       {
         path: '/assets/my-transaction',
-        name: '交易',
+        name: '流转',
         component: './Transaction',
       }
     ],
   },
   {
     path: '/transaction-info',
-    name: '交易详情页',
+    name: '流转详情页',
     component: './TransactionInfo',
     hideInMenu: true
   },

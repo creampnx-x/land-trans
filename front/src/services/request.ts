@@ -81,11 +81,12 @@ export function createTransaction(data: any) {
 
 export function UpdateTransaction(data: {
     transactionId: string
-    key: string
-    value: string
+    status: string,
+    requester: string,
+    validar: string,
 }) {
-    return request('http://localhost:8080/land/tran/update', {
-        method: 'Get',
+    return request('http://localhost:8080/land/tran/valid', {
+        method: 'Post',
         data
     })
 }

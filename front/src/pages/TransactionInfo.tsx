@@ -27,8 +27,9 @@ function TransactionInfo(props: { transaction: TransactionInfoType, title?: stri
     const actionForTransaction = (action: string) => {
         UpdateTransaction({
             transactionId: transaction.transactionId,
-            key: 'status',
-            value: action
+            status: action,
+            requester: transaction.requester,
+            validar: transaction.validar,
         }).then((res) => {
             if (res.status !== 'ok')
                 message.error(res.info);
@@ -40,7 +41,7 @@ function TransactionInfo(props: { transaction: TransactionInfoType, title?: stri
         <div>
             <ProDescriptions
                 column={2}
-                title={title === undefined ? '交易信息' : title}
+                title={title === undefined ? '流转信息' : title}
                 extra={(
                     <>
                         {transaction.status === '0' && userInfo?.userid === transaction.requester &&

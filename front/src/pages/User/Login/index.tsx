@@ -304,7 +304,7 @@ const Login: React.FC = () => {
               }}
             >
               <ProFormCheckbox noStyle name="autoLogin">
-                自动登录"
+                自动登录
               </ProFormCheckbox>
             </div>}
         </LoginForm>
